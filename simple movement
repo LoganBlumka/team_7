@@ -1,0 +1,50 @@
+extends CharacterBody2D
+
+# controls the speed of the character
+const SPEED = 130.0
+# controls the height of the characters jump (negative = higher)
+const JUMP_VELOCITY = -300.0
+
+# allows us to set distinct animations for character inputs
+@onready var animated_sprite = $AnimatedSprite2D
+
+# Since we are not using platforms, we use physics process
+# to create an invisble platform for our character to move on
+func _physics_process(delta: float) -> void:
+	# Add the gravity.
+	if not is_on_floor():
+		velocity += get_gravity() * delta
+
+	# Segment that handles jump input
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+		
+	
+	# Gets input direction from the user, flipping the character
+	# left or right when moving left or right
+	var direction := Input.get_axis("move_left", "move_right")
+	
+	if direction > 0:
+		animated_sprite.flip_h = false
+	elif direction < 0:
+		animated_sprite.flip_h = true
+	# This segment of code plays the animations when given a certain input
+	if is_on_floor():	#"If player is on the ground"
+		# "If player is standing still, play idle animation"
+		if direction == 0: 
+			animated_sprite.play("idle")
+		# "If player is moving right or left, play run animation
+		elif direction < 0 or direction > 0: 
+			animated_sprite.play("run")
+	# "If player is not touching the ground, they must be jumping
+	else:
+		#plays jump animation
+		animated_sprite.play("jump_anim")
+		
+	# Segment of code that actually moves the character
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	move_and_slide()
